@@ -6,6 +6,8 @@ const BASE_URL = 'http://127.0.0.1:8000/';
 
 export const endpoints = {
 
+    'create_inventory_board': '/inventory_board/create_inventory_board/',
+    'get_inventory_board': '/inventory_board/get_inventory_board/',
    
     'register': '/users/',
     'list_user': '/users/',

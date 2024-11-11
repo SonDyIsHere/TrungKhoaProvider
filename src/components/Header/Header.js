@@ -47,7 +47,7 @@ const Header = () => {
             {/* Dropdown cho Danh mục */}
             <li className="text-center group relative">
               <button className="text-white group-hover:text-yellow-400 flex items-center">
-              <Link to="/destinations" className="text-white group-hover:text-yellow-400">
+              <Link className="text-white group-hover:text-yellow-400">
                 <FaListAlt className="text-white group-hover:text-yellow-400 mx-auto" />
                 Danh mục
               </Link>
