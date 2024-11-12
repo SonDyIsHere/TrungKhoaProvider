@@ -8,6 +8,8 @@ export const endpoints = {
 
     'create_inventory_board': '/inventory_board/create_inventory_board/',
     'get_inventory_board': '/inventory_board/get_inventory_board/',
+
+    'update_inventory': (inv_id, inv_board_id) => `/inventory_board/${inv_board_id}/inventory/${inv_id}/update/`,
    
     'register': '/users/',
     'list_user': '/users/',

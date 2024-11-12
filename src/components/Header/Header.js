@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate, Link } from "react-router-dom";
-import logo from '../../assets/image/travel.png';
+import logo from '../../assets/image/logo.png';
 import { FaHome, FaBriefcase, FaSignInAlt, FaUserPlus, FaUser, FaCaretDown, FaUserCog, FaListAlt, FaQuestion, FaInfoCircle } from 'react-icons/fa';
 import { MyUserContext, MyDispatchContext } from '../../configs/Context';
 

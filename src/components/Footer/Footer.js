@@ -12,7 +12,7 @@ const Footer = () => {
           </ul>
         </div>
         <div>
-          <p>&copy; 2024 Travefy. All rights reserved.</p>
+          <p>&copy; 2024 TRUNG KHOA. All rights reserved.</p>
         </div>
       </div>
     </footer>
