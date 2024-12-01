@@ -7,9 +7,14 @@ const BASE_URL = 'http://127.0.0.1:8000/';
 export const endpoints = {
 
     'create_inventory_board': '/inventory_board/create_inventory_board/',
-    'get_inventory_board': '/inventory_board/get_inventory_board/',
 
-    'update_inventory': (inv_id, inv_board_id) => `/inventory_board/${inv_board_id}/inventory/${inv_id}/update/`,
+    'get_inventory_board': '/inventory_board/',
+
+
+
+
+
+    'update_inventory': `/inventory_board/`,
    
     'register': '/users/',
     'list_user': '/users/',

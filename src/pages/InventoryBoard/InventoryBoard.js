@@ -3,21 +3,50 @@ import { useNavigate } from 'react-router-dom';
 import APIs, { endpoints } from '../../configs/APIs';
 import { format } from 'date-fns'; 
 import { BiPencil, BiTrash, BiDotsHorizontalRounded, BiDetail, BiHide } from 'react-icons/bi';
+import { FaPencil } from 'react-icons/fa6';
 
 const InventoryBoard = () => {
-  const [inventoryBoards, setInventoryBoard] = useState([]);
+  const [inventoryBoards, setInventoryBoard] = useState({});
+  const [inventory, setInventory] = useState([])
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
 
   const handleEditClick = () => setIsEditing(!isEditing);
 
-  const handleInputChange = (index, field, value) => {
-    setInventoryBoard(prevState =>
-      prevState.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
-      )
-    );
+  const handleInputChange = (id, field, value) => {
+    setInventoryBoard((prevState) => {
+      if (Array.isArray(prevState.inventory)) {
+        const updatedInventory = prevState.inventory.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item
+        );
+        return {
+          ...prevState,
+          inventory: updatedInventory,
+        };
+      }
+      return prevState;
+    });
+  };
+  
+  
+  
+  
+
+
+  const isValidDate = selectedDate && !isNaN(Date.parse(selectedDate));
+  const formattedDate = isValidDate ? format(new Date(selectedDate), 'dd-MM-yyyy') : '';
+
+  const handleSelectChange = async (boardDate) => {
+    try {
+      const response = await APIs.get(`${endpoints['get_inventory_board']}detail/${boardDate}/`);
+      const data = response.data;
+      setInventoryBoard(data);  
+      console.log(data)
+    } catch (error) {
+      console.error("Error fetching inventory board:", error);
+      setInventoryBoard({});
+    }
   };
 
   const handleDateChange = async (event) => {
@@ -27,45 +56,33 @@ const InventoryBoard = () => {
     }
 
     const selectedDate = event.target.value;
-    setSelectedDate(selectedDate);
-    handleSelectChange(selectedDate); 
+    setSelectedDate(selectedDate); 
+    handleSelectChange(selectedDate);
   };
 
-  const handleSelectChange = async (boardDate) => {
+  
+  const handleSaveChanges = async (id) => {
     try {
-      const response = await APIs.get(`${endpoints['get_inventory_board']}${boardDate}/`);
-      const data = response.data;
-      if (Array.isArray(data)) {
-        setInventoryBoard(data);
-      } else {
-        console.error("Received data is not an array", data);
-        setInventoryBoard([]);
-      }
-    } catch (error) {
-      console.error("Error fetching inventory board:", error);
-      setInventoryBoard([]);
-    }
-  };
+      const inventory = inventoryBoards.inventory.find((item) => item.id === id);
 
-  const handleSaveChanges = async () => {
-    try {
-      for (const inventory of inventoryBoards) {
-        // Call API with correct endpoint structure using inventory board and inventory IDs
-        await APIs.patch(
-          endpoints['update_inventory'](inventoryBoards.id, inventory.id), // Pass `inv_id` as inventory.id and `inv_board_id` as inventoryBoards.id
-          inventory
-        );
-      }
-      setIsEditing(false); // Exit editing mode
+      // Gọi API để lưu thay đổi
+      await APIs.patch(
+        `${endpoints['update_inventory']}${inventoryBoards.id}/inventory/${inventory.id}/update/`,
+        inventory
+      );
+
+      setIsEditing(null); // Thoát chế độ chỉnh sửa
       alert('Changes saved successfully');
     } catch (error) {
-      console.error("Error saving changes:", error);
+      console.error('Error saving changes:', error);
     }
   };
   
+  
+  
+  
 
-  const isValidDate = selectedDate && !isNaN(Date.parse(selectedDate));
-  const formattedDate = isValidDate ? format(new Date(selectedDate), 'dd-MM-yyyy') : '';
+
 
   return (
     <div className="my-10">
@@ -86,19 +103,13 @@ const InventoryBoard = () => {
 
       <div className="flex justify-end mt-4 space-x-2">
         <button 
-          onClick={() => setIsEditing(!isEditing)} 
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+         onClick={() => isEditing ? handleSaveChanges() : setIsEditing(true)} 
+          className="px-4 py-2 mr-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
-          {isEditing ? "Lưu" : "Sửa"}
+          {isEditing ? "Lưu" : "Sửa"
+          }
         </button>
-        {isEditing && (
-          <button 
-            onClick={handleSaveChanges} 
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-          >
-            Lưu thay đổi
-          </button>
-        )}
+        
       </div>
 
       <table className="min-w-full my-2 bg-white border border-gray-200 table-auto">
@@ -112,94 +123,111 @@ const InventoryBoard = () => {
             <th className="py-3 px-6 text-center">Số lượng hư</th>
             <th className="py-3 px-6 text-center text-red-600">Tồn cuối ngày</th>
             <th className="py-3 px-6 text-center">Hao hụt</th>
+            <th className="py-3 px-6 text-center"></th>
           </tr>
         </thead>
         <tbody className="text-blue-600 text-sm font-medium">
-          {inventoryBoards.map((inventoryboard, index) => (
-            <tr key={inventoryboard.id} className="border-b border-gray-200 hover:bg-gray-100">
+        {inventoryBoards.inventory?.map((inventory, index) => (
+            <tr key={inventory.id} className="border-b border-gray-200 hover:bg-gray-100">
               <td className="py-3 px-6 text-left font-medium">{index + 1}</td>
 
               <td className="py-3 px-6 text-left">
-                {inventoryboard.product}
+                {inventory.product}
               </td>
 
               <td className="py-3 px-6 text-center">
-                {isEditing ? (
+                {isEditing === inventory.id ? (
                   <input
                     type="number"
-                    value={inventoryboard.current_quantity}
-                    onChange={(e) => handleInputChange(index, 'current_quantity', e.target.value)}
+                    value={inventory.current_quantity}
+                    onChange={(e) => handleInputChange(inventory.id, 'current_quantity', e.target.value)}
                     className="border rounded px-2 py-1 w-12"
                   />
                 ) : (
-                  <span>{inventoryboard.current_quantity}</span>
+                  <span>{inventory.current_quantity}</span>
                 )}
               </td>
 
               <td className="py-3 px-6 text-center">
-                {isEditing ? (
+                {isEditing === inventory.id ? (
                   <input
                     type="number"
-                    value={inventoryboard.import_quantity}
-                    onChange={(e) => handleInputChange(index, 'import_quantity', e.target.value)}
+                    value={inventory.import_quantity}
+                    onChange={(e) => handleInputChange(inventory.id, 'import_quantity', e.target.value)}
                     className="border rounded px-2 py-1 w-12"
                   />
                 ) : (
-                  <span>{inventoryboard.import_quantity}</span>
+                  <span>{inventory.import_quantity}</span>
                 )}
               </td>
 
               <td className="py-3 px-6 text-center">
-                {isEditing ? (
+                {isEditing === inventory.id ? (
                   <input
                     type="number"
-                    value={inventoryboard.export_quantity}
-                    onChange={(e) => handleInputChange(index, 'export_quantity', e.target.value)}
+                    value={inventory.export_quantity}
+                    onChange={(e) => handleInputChange(inventory.id, 'export_quantity', e.target.value)}
                     className="border rounded px-2 py-1 w-12"
                   />
                 ) : (
-                  <span>{inventoryboard.export_quantity}</span>
+                  <span>{inventory.export_quantity}</span>
                 )}
               </td>
 
               <td className="py-3 px-6 text-center">
-                {isEditing ? (
+                {isEditing === inventory.id ? (
                   <input
                     type="number"
-                    value={inventoryboard.spoiled_quantity}
-                    onChange={(e) => handleInputChange(index, 'spoiled_quantity', e.target.value)}
+                    value={inventory.spoiled_quantity}
+                    onChange={(e) => handleInputChange(inventory.id, 'spoiled_quantity', e.target.value)}
                     className="border rounded px-2 py-1 w-12"
                   />
                 ) : (
-                  <span>{inventoryboard.spoiled_quantity}</span>
+                  <span>{inventory.spoiled_quantity}</span>
                 )}
               </td>
 
               <td className="py-3 px-6 text-center">
-                {isEditing ? (
+                {isEditing === inventory.id ? (
                   <input
                     type="number"
-                    value={inventoryboard.final_quantity}
-                    onChange={(e) => handleInputChange(index, 'final_quantity', e.target.value)}
+                    value={inventory.final_quantity}
+                    onChange={(e) => handleInputChange(inventory.id, 'final_quantity', e.target.value)}
                     className="border rounded px-2 py-1 w-12"
                   />
                 ) : (
-                  <span>{inventoryboard.final_quantity}</span>
+                  <span>{inventory.final_quantity}</span>
                 )}
               </td>
 
               <td className="py-3 px-6 text-center">
-                <span 
+                <span
                   className={`font-medium ${
-                    inventoryboard.loss_quantity > 0 
-                      ? 'text-green-600' 
-                      : inventoryboard.loss_quantity < 0 
-                        ? 'text-red-600' 
-                        : 'text-blue-600'
+                    inventory.loss_quantity > 0
+                      ? 'text-green-600'
+                      : inventory.loss_quantity < 0
+                      ? 'text-red-600'
+                      : 'text-blue-600'
                   }`}
                 >
-                  {inventoryboard.loss_quantity}
+                  {inventory.loss_quantity}
                 </span>
+              </td>
+
+              <td className="py-3 px-6 text-center">
+                {isEditing === inventory.id ? (
+                  <button
+                    onClick={() => handleSaveChanges(inventory.id)}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Save
+                  </button>
+                ) : (
+                  <BiPencil
+                    className="cursor-pointer text-gray-600 hover:text-blue-500"
+                    onClick={() => setIsEditing(inventory.id)}
+                  />
+                )}
               </td>
             </tr>
           ))}

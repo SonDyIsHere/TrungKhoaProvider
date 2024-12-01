@@ -13,7 +13,8 @@ import Attendance from './pages/Attendance/Attendance'
 import Convertion from './pages/Convertion/Convertion'
 import InventoryBoard from './pages/InventoryBoard/InventoryBoard'
 
-
+// import SignIn from './pages/User/SignIn'
+// import SignUp from './pages/User/SignUp'
 function MyTab() {
   return (
     <Router>
